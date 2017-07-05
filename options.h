@@ -29,6 +29,7 @@
 #define BLOCK_SIZE				524288
 #define MAX_MESSAGES_IN_BLOCK	256
 #define DEFAULT_LOG_LEVEL		LOG_FATAL
+#define DEFAULT_TCP_PORT 40005
 
 #define ARG_GAIN_MAX	0xfff0
 #define ARG_GAIN_AUTO	0xfff1
@@ -40,6 +41,7 @@ typedef struct
 {
 	char *args[2];
 	int dev_index;
+	int tcp_port;
 	int freq;
 	int freq_correction;
 	int gain;
@@ -58,4 +60,3 @@ void print_usage();
 
 
 #endif
-
