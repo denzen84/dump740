@@ -19,6 +19,7 @@
 #include "decoder.h"
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 
 #define MAX_MSG_SIZE	728 // (44 us header + 8*20*2 us data) * 2 (1 item = 0.5 us)
@@ -186,28 +187,56 @@ void print_message(FILE *f,
 	int type, data;
 	int fuel, altitude_type, altitude;
 	int speed, angle;
+	
+	// Added 
+	struct tm time_now;
+	struct timespec now;
+	char *p; // pointer to MSG string
+	char *s; // pointer to first char of MSG string
+	int icao_hex;
+	int uvd_reg;
+	// -------------------
+	
 
 #ifdef TEST
 	uint32_t message;
 	message = tmessage & 0xffffffff;
 	tmessage >>= 32;
 	tmessage += (uint64_t)block_n * (BLOCK_SIZE >> 1);
-	fprintf(f, "offset = %lu\n", tmessage);
+	//fprintf(f, "offset = %lu\n", tmessage);
 #endif
-
-	fprintf(f, "*%08x;\n", message);
 
 	if (options.raw)
 		return;
 
 	type = (message >> 24);
 	data = message & 0xfffff;
+       
+        // Added
+	p = (char*)malloc(200);
+	s = p;
+	clock_gettime(CLOCK_REALTIME, &now);
+	localtime_r(&now.tv_sec, &time_now);
+	// --------------------
+
 
 	switch (type) {
 		case TYPE_ZK1:
-			fprintf(f, "  Code: %05x\n", data);
-			break;
+			uvd_reg = data;
+			icao_hex = (uvd_reg & 0x1ffff) | 0x140000;
 
+			// the same as the code in dump1090
+			p += sprintf(p,"MSG,1,0,0,%06X,0,",icao_hex);
+			p += sprintf(p, "%04d/%02d/%02d,", (time_now.tm_year+1900),(time_now.tm_mon+1), time_now.tm_mday);
+			p += sprintf(p, "%02d:%02d:%02d.%03u,", time_now.tm_hour, time_now.tm_min, time_now.tm_sec, (unsigned) (now.tv_nsec / 1000000U));
+			p += sprintf(p, "%04d/%02d/%02d,", (time_now.tm_year+1900),(time_now.tm_mon+1), time_now.tm_mday);
+			p += sprintf(p, "%02d:%02d:%02d.%03u,", time_now.tm_hour, time_now.tm_min, time_now.tm_sec, (unsigned) (now.tv_nsec / 1000000U));
+			p += sprintf(p, "%05x,,,,,,,,,,,0",uvd_reg);
+
+			fprintf(f, "%s\n\r", s);
+			fflush(f);
+			break;
+/* 
 		case TYPE_ZK2:
 			fuel = (data >> 16) & 0xf;
 			if (fuel <= 10)
@@ -230,6 +259,7 @@ void print_message(FILE *f,
 			fprintf(f, "  Speed: %d km/h\n", speed);
 			fprintf(f, "  Angle: %d°\n", angle);
 			break;
+*/
 	}
-	fprintf(f, "\n");
+	//fprintf(f, "\n");
 }
