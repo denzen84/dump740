@@ -23,10 +23,11 @@
 
 options_t options;
 
-static const char *opts = "d:f:c:g:i:rl:Dh?";
+static const char *opts = "d:p:f:c:g:i:rl:Dh?";
 
 static const struct option long_opts[] = {
 	{"device-index",	required_argument,	NULL,	'd'},
+        {"port",		required_argument,	NULL,	'p'},
 	{"freq",			required_argument,	NULL,	'f'},
 	{"freq-correction",	required_argument,	NULL,	'c'},
 	{"gain",			required_argument,	NULL,	'g'},
@@ -43,6 +44,7 @@ void parse_args(int argc, char **argv)
 	int opt, len, mult, ind;
 
 	options.dev_index = 0;
+	options.tcp_port = DEFAULT_TCP_PORT;
 	options.freq = DEFAULT_FREQUENCY;
 	options.freq_correction = 0;
 	options.gain = ARG_GAIN_MAX;
@@ -57,6 +59,9 @@ void parse_args(int argc, char **argv)
 		switch (opt) {
 			case 'd':
 				options.dev_index = atoi(optarg);
+				break;
+			case 'p':
+				options.tcp_port = atoi(optarg);
 				break;
 			case 'f':
 				len = strlen(optarg);
@@ -103,10 +108,10 @@ void parse_args(int argc, char **argv)
 
 void print_usage()
 {
-	print(	"Usage: dump740 [OPTION...]\n"
+	print(	"Usage: dump740-mutability [OPTION...]\n"
 			"Program for receiving and decoding UVD protocol.\n"
-			"Version: %d.%d.%d.\n"
-			"Example: ./dump740 -d 1 -f 730M -g 42.1 -a -r\n"
+			"Version: %d.%d.%d. (console MSG unbuffered output)\n"
+			"Example: ./dump740-mutability -d 1 -f 730M -g 42.1 -a -r\n"
 			"\n"
 			"\t-c, --freq-correction=<ppm>  Set frequency correction (default: 0)\n"
 			"\t-d, --device-index=<index>   Select RTLSDR device\n"
@@ -116,6 +121,7 @@ void print_usage()
 			"\t                               and thousand respectively\n"
 			"\t-g, --gain=<db>              Set gain (default: max gain, use 'A' for auto-gain)\n"
 			"\t-i, --ifile=<filename>       Read data from file\n"
+			"\t-p, --port=<number>          TCP port for incoming connections (default:40005)\n"
 			"\t-l, --log-level=<0-4>        Minimum log level: 0 - DEBUG, 1 - INFO, 2 - WARNING, 3 - FATAL\n"
 			"\t-r, --raw                    Show only raw messages\n"
 			"\t-?, --help                   Give this help list\n"
